@@ -40,12 +40,15 @@ async function main() {
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
+  cors: {
+    origin: "*"
+  },
   connectionStateRecovery: {},
   // set up the adapter on each worker thread
   adapter: createAdapter()
 });
 
-app.get("/", (req, res) => res.sendFile(join(__dirname, 'index.html')));
+// app.get("/", (req, res) => res.sendFile(join(__dirname, 'index.html')));
 
 io.on('connection', (socket) => {
   console.log('a user connected');
