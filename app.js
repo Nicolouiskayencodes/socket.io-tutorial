@@ -8,6 +8,7 @@ const io = new Server(server, {
   cors: {
     origin: "*"
   },
+  connectionStateRecovery: {},
 });
 
 io.on('connection', (socket) => {
