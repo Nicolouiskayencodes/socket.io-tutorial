@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
+async function main() {
 const db = await open({
   filename: 'chat.db',
   driver: sqlite3.Database
@@ -26,13 +27,13 @@ const io = new Server(server, {
   connectionStateRecovery: {},
 });
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('a user connected');
   socket.on('disconnect', () => {
     console.log('user disconnected');
   });
 });
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   socket.on('chat message', async (msg) => {
     console.log(msg)
     let result;
@@ -46,22 +47,25 @@ io.on('connection', (socket) => {
       // include the offset with the message
       io.emit('chat message', msg, result.lastID);
   });
-});
-if (!socket.recovered) {
-  // if the connection state recovery was not successful
-  try {
-    await db.each('SELECT id, content FROM messages WHERE id > ?',
-      [socket.handshake.auth.serverOffset || 0],
-      (_err, row) => {
-        socket.emit('chat message', row.content, row.id);
-      }
-    )
-  } catch (e) {
-    // something went wrong
+  if (!socket.recovered) {
+    // if the connection state recovery was not successful
+    try {
+      await db.each('SELECT id, content FROM messages WHERE id > ?',
+        [socket.handshake.auth.serverOffset || 0],
+        (_err, row) => {
+          socket.emit('chat message', row.content, row.id);
+        }
+      )
+    } catch (e) {
+      // something went wrong
+    }
   }
-}
+});
 
 const PORT = 3000;
 io.listen(PORT, () => {
   console.log(`Listening on port ${PORT}!`);
 });
+}
+
+main();
